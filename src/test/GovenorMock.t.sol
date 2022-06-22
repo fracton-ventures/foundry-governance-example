@@ -55,12 +55,8 @@ contract WhenTransferringTokens is BaseSetup {
     }
 
     function testPropose() public {
-        // set block.number after snapshot
-        vm.prank(alice);
-        erc20VotesMock.delegate(bob);
-        vm.prank(alice);
-        erc20VotesMock.transfer(bob, 100);
 
+        // create proposal
         address[] memory targets = new address[](1);
         targets[0] = address(callReceiverMock);
 
@@ -68,7 +64,7 @@ contract WhenTransferringTokens is BaseSetup {
         values[0] = 1;
 
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encode("mockFunction()");
+        calldatas[0] = abi.encodeWithSignature("mockFunction()");
 
         uint256 proposalId = governorMock.propose(
             targets,
@@ -76,14 +72,21 @@ contract WhenTransferringTokens is BaseSetup {
             calldatas,
             "<proposal description>"
         );
+
+        // delegate votes
+        vm.prank(alice);
+        erc20VotesMock.delegate(alice);
+
+        // after start block of voting
         vm.roll(10);
-        vm.prank(bob);
+        vm.prank(alice);
         governorMock.castVote(proposalId, 1);
+        // after end block of voting
         vm.roll(30);
-        erc20VotesMock.getPastVotes(bob, governorMock.proposalSnapshot(proposalId));
-        erc20VotesMock.numCheckpoints(bob);
-        governorMock.state(proposalId);
-        governorMock.proposalVotes(proposalId);
+
+        // this passes
+        address(targets[0]).call{value: values[0]}(calldatas[0]);
+        // but this fails
         governorMock.execute(
             targets,
             values,
