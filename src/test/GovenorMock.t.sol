@@ -19,6 +19,7 @@ contract BaseSetup is Test {
     address internal alice;
     address internal bob;
     address internal carol;
+    address internal dave;
 
     GovernorMock internal governorMock;
     ERC20VotesMock internal erc20VotesMock;
@@ -26,7 +27,7 @@ contract BaseSetup is Test {
 
     function setUp() public virtual {
         utils = new Utils();
-        users = utils.createUsers(3);
+        users = utils.createUsers(4);
 
         alice = users[0];
         vm.label(alice, "Alice");
@@ -34,9 +35,15 @@ contract BaseSetup is Test {
         vm.label(bob, "Bob");
         carol = users[2];
         vm.label(carol, "Carol");
+        dave = users[3];
+        vm.label(dave, "Dave");
 
         erc20VotesMock = new ERC20VotesMock("MockToken", "MTKN");
-        erc20VotesMock.mint(alice, 100);
+        erc20VotesMock.mint(address(this), 100);
+        erc20VotesMock.transfer(alice, 25);
+        erc20VotesMock.transfer(bob, 25);
+        erc20VotesMock.transfer(carol, 25);
+        erc20VotesMock.transfer(dave, 25);
         governorMock = new GovernorMock(
             "OZ-Governor",
             IVotes(address(erc20VotesMock)),
@@ -48,20 +55,19 @@ contract BaseSetup is Test {
     }
 }
 
-contract WhenTransferringTokens is BaseSetup {
+contract ProposalIsExecuted is BaseSetup {
     function setUp() public virtual override {
         BaseSetup.setUp();
-        console.log("When transferring tokens");
+        console.log("Proposal is Executed");
     }
 
     function testPropose() public {
-
         // create proposal
         address[] memory targets = new address[](1);
         targets[0] = address(callReceiverMock);
 
         uint256[] memory values = new uint256[](1);
-        values[0] = 1;
+        values[0] = 0;
 
         bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = abi.encodeWithSignature("mockFunction()");
@@ -76,17 +82,35 @@ contract WhenTransferringTokens is BaseSetup {
         // delegate votes
         vm.prank(alice);
         erc20VotesMock.delegate(alice);
+        vm.prank(bob);
+        erc20VotesMock.delegate(bob);
+        vm.prank(carol);
+        erc20VotesMock.delegate(carol);
+        vm.prank(dave);
+        erc20VotesMock.delegate(dave);
 
-        // after start block of voting
-        vm.roll(10);
+        // after start block
+        vm.roll(governorMock.proposalSnapshot(proposalId) + 1);
+
+        // cast vote
         vm.prank(alice);
         governorMock.castVote(proposalId, 1);
-        // after end block of voting
-        vm.roll(30);
+        vm.prank(bob);
+        governorMock.castVote(proposalId, 1);
+        vm.prank(carol);
+        governorMock.castVote(proposalId, 0);
+        vm.prank(dave);
+        governorMock.castVote(proposalId, 2);
 
-        // this passes
-        address(targets[0]).call{value: values[0]}(calldatas[0]);
-        // but this fails
+        // after end block
+        vm.roll(governorMock.proposalDeadline(proposalId) + 1);
+
+        // check vote result
+        (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes) = governorMock.proposalVotes(proposalId);
+        assertEq(againstVotes, 25);
+        assertEq(forVotes, 50);
+        assertEq(abstainVotes, 25);
+
         governorMock.execute(
             targets,
             values,
