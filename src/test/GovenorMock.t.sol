@@ -106,7 +106,11 @@ contract ProposalIsExecuted is BaseSetup {
         vm.roll(governorMock.proposalDeadline(proposalId) + 1);
 
         // check vote result
-        (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes) = governorMock.proposalVotes(proposalId);
+        (
+            uint256 againstVotes,
+            uint256 forVotes,
+            uint256 abstainVotes
+        ) = governorMock.proposalVotes(proposalId);
         assertEq(againstVotes, 25);
         assertEq(forVotes, 50);
         assertEq(abstainVotes, 25);
