@@ -38,12 +38,14 @@ contract BaseSetup is Test {
         dave = users[3];
         vm.label(dave, "Dave");
 
+        // token
         erc20VotesMock = new ERC20VotesMock("MockToken", "MTKN");
         erc20VotesMock.mint(address(this), 100);
         erc20VotesMock.transfer(alice, 25);
         erc20VotesMock.transfer(bob, 25);
         erc20VotesMock.transfer(carol, 25);
         erc20VotesMock.transfer(dave, 25);
+
         governorMock = new GovernorMock(
             "OZ-Governor",
             IVotes(address(erc20VotesMock)),
@@ -51,6 +53,7 @@ contract BaseSetup is Test {
             16,
             10
         );
+
         callReceiverMock = new CallReceiverMock();
     }
 }
@@ -115,6 +118,7 @@ contract ProposalIsExecuted is BaseSetup {
         assertEq(forVotes, 50);
         assertEq(abstainVotes, 25);
 
+        // execute succeeded proposal
         governorMock.execute(
             targets,
             values,
