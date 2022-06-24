@@ -20,4 +20,5 @@ jobs:
         run: npm ci
 
       - name: Run lints
-        run: npx prettier --write src/**/*.sol && npx prettier --write src/*.sol
+        # run: npx prettier --write src/**/*.sol && npx prettier --write src/*.sol
+        run: npx prettier --write src/**/*.sol # to avoid no matching file error
