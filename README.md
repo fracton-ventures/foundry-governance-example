@@ -1,5 +1,7 @@
 # Foundry Governance contracts example
-Uses OpenZeppelin Governance contracts ([openzeppelin-contracts/contracts/mocks/GovernorMock.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/mocks/GovernorMock.sol)).
+Testing OpenZeppelin Governance mock contracts
+- [openzeppelin-contracts/contracts/mocks/GovernorMock.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/mocks/GovernorMock.sol)
+- [openzeppelin-contracts/contracts/mocks/GovernorTimelockControllMock.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/mocks/GovernorTimelockControlMock.sol)
 
 ## install
 `forge install`
